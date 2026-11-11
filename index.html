@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Voyage Bruxelles–Nevers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: horizontal timetable page. Header, 3 key facts, countdown, then Aller and Retour, each with a to-scale day strip and leg cards. */
+:root {
+  --bg: #f1f4f7;
+  --surface: #ffffff;
+  --ink: #12202c;
+  --muted: #5a6b7a;
+  --line: #d6dde4;
+  --flix: #5fc400;
+  --ter: #0b6fb3;
+  --euro: #c9961a;
+  --car: #7a55c9;
+  --warn: #b4560a;
+  --focus: #0b6fb3;
+  --font-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1720; --surface: #16212c; --ink: #e7eef4; --muted: #93a4b3; --line: #29384a;
+    --flix: #7ad61a; --ter: #46a6e6; --euro: #e3b53f; --focus: #46a6e6;
+    --car: #a68df0; --warn: #f0a050;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1720; --surface: #16212c; --ink: #e7eef4; --muted: #93a4b3; --line: #29384a;
+  --flix: #7ad61a; --ter: #46a6e6; --euro: #e3b53f; --focus: #46a6e6;
+  --car: #a68df0; --warn: #f0a050;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+  padding-block: 32px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1, h2, h3, p { margin: 0; }
+h1, h2 { font-family: var(--font-display); font-weight: 700; text-wrap: balance; }
+.eyebrow { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Header */
+.head { display: flex; flex-direction: column; gap: 8px; }
+h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); line-height: 1; letter-spacing: 0.01em; }
+h1 .arrow { color: var(--muted); font-weight: 500; padding-inline: 0.15em; }
+.sub { color: var(--muted); }
+
+/* Key facts */
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fact .big { font-family: var(--font-display); font-size: 1.9rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fact .small { color: var(--muted); font-size: 0.9rem; }
+
+/* Countdown */
+.count { background: var(--ink); color: var(--bg); border-radius: 12px; padding: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.count .lbl { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.count .lbl strong { font-size: 1.05rem; font-weight: 600; }
+.count .lbl span { opacity: 0.75; font-size: 0.9rem; }
+.clock { display: flex; gap: 10px; }
+.unit { display: flex; flex-direction: column; align-items: center; min-width: 64px; }
+.unit b { font-family: var(--font-display); font-size: 2.6rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.unit i { font-style: normal; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+
+/* Day sections */
+.day { display: flex; flex-direction: column; gap: 18px; }
+.day-head { display: flex; flex-direction: column; gap: 2px; }
+h2 { font-size: clamp(1.8rem, 5vw, 2.4rem); line-height: 1.05; }
+
+.strip { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+.track { position: relative; height: 22px; border-radius: 4px;
+  background:
+    linear-gradient(to right, transparent calc(25% - 0.5px), var(--line) calc(25% - 0.5px), var(--line) calc(25% + 0.5px), transparent calc(25% + 0.5px)),
+    linear-gradient(to right, transparent calc(50% - 0.5px), var(--line) calc(50% - 0.5px), var(--line) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(to right, transparent calc(75% - 0.5px), var(--line) calc(75% - 0.5px), var(--line) calc(75% + 0.5px), transparent calc(75% + 0.5px)),
+    color-mix(in srgb, var(--line) 45%, transparent); }
+.seg { position: absolute; top: 3px; bottom: 3px; border-radius: 3px; background: var(--c); }
+.seg.est { background: repeating-linear-gradient(135deg, var(--c) 0 5px, color-mix(in srgb, var(--c) 40%, transparent) 5px 9px); }
+.ticks { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ticks span { width: 3ch; text-align: center; }
+.ticks span:first-child { text-align: left; }
+.ticks span:last-child { text-align: right; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend span::before { content: ""; width: 10px; height: 10px; border-radius: 2px; background: var(--c); }
+
+/* Leg cards */
+.legs { display: flex; flex-direction: column; gap: 10px; }
+.leg { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.leg-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 3px 12px 3px 10px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; background: color-mix(in srgb, var(--c) 20%, transparent); }
+.chip::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.dur { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; position: relative; }
+.stops::before { content: ""; position: absolute; left: 4.6rem; top: 14px; bottom: 14px; width: 2px; background: var(--c); opacity: 0.6; }
+.stops li { display: grid; grid-template-columns: 3.6rem 1fr; gap: 0 1.6rem; align-items: center; position: relative; }
+.stops li::after { content: ""; position: absolute; left: calc(3.6rem + 0.8rem - 5px + 0.3rem); width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); top: 50%; transform: translateY(-50%); }
+.stops time { font-family: var(--font-display); font-size: 2rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.stops .place { font-weight: 500; min-width: 0; overflow-wrap: anywhere; padding-left: 0.4rem; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 0.9rem; color: var(--muted); }
+.meta code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.95rem; color: var(--ink); background: color-mix(in srgb, var(--line) 50%, transparent); padding: 2px 8px; border-radius: 6px; letter-spacing: 0.03em; user-select: all; }
+.copy { font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.copy:hover { border-color: var(--muted); }
+.meta .grow { margin-left: auto; }
+
+.gap { display: flex; align-items: center; gap: 12px; padding: 4px 6px; color: var(--muted); font-size: 0.92rem; }
+.gap::before, .gap::after { content: ""; height: 0; border-top: 2px dotted var(--line); flex: 1; min-width: 12px; }
+.gap::before { flex: 0 0 24px; }
+.gap b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.gap.warn { color: var(--warn); }
+.gap.warn b { color: var(--warn); }
+.gap span { min-width: 0; text-align: center; }
+
+/* Stay + checklist */
+.stay { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.stay .big { font-family: var(--font-display); font-size: 2.2rem; font-weight: 600; line-height: 1; }
+.stay p { color: var(--muted); min-width: 0; }
+
+.checks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.checks li { min-width: 0; }
+.checks label { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; cursor: pointer; }
+.checks input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--ter); }
+.checks input:checked + span { color: var(--muted); text-decoration: line-through; }
+.checks span { min-width: 0; }
+
+.foot { color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 640px) {
+  .facts { grid-template-columns: 1fr; }
+  .checks { grid-template-columns: 1fr; }
+  .unit { min-width: 56px; }
+  .unit b { font-size: 2.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { color-scheme: light; }
+body { margin: 0; }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <header class="head">
+    <p class="eyebrow">19 – 23 novembre 2026 · 1 voyageur · départ et retour à Huy</p>
+    <h1>Bruxelles<span class="arrow">→</span>Nevers<span class="arrow">→</span>Nîmes</h1>
+    <p class="sub">Aller en FlixBus via Paris, voiture de Nevers à Nîmes (aller-retour), retour en TER puis Eurostar.</p>
+  </header>
+
+  <section class="facts" aria-label="Résumé du voyage">
+    <div class="fact">
+      <span class="eyebrow">Aller · ven. 20 nov.</span>
+      <span class="big">00:45 → 13:45</span>
+      <span class="small">13 h au total, 2 FlixBus</span>
+    </div>
+    <div class="fact">
+      <span class="eyebrow">En voiture</span>
+      <span class="big">Nevers ⇄ Nîmes</span>
+      <span class="small">≈ 507 km, ≈ 5 h 19 par trajet</span>
+    </div>
+    <div class="fact">
+      <span class="eyebrow">Retour · lun. 23 nov.</span>
+      <span class="big">14:25 → 20:47</span>
+      <span class="small">6 h 22 au total, TER + Eurostar</span>
+    </div>
+  </section>
+
+  <section class="count" aria-live="polite">
+    <div class="lbl">
+      <strong id="count-title">Départ de Bruxelles-Nord dans</strong>
+      <span>Ven. 20 nov. à 00:45, soit dans la nuit de jeudi à vendredi</span>
+    </div>
+    <div class="clock" id="clock">
+      <div class="unit"><b id="cd-d">--</b><i>jours</i></div>
+      <div class="unit"><b id="cd-h">--</b><i>heures</i></div>
+      <div class="unit"><b id="cd-m">--</b><i>min</i></div>
+    </div>
+  </section>
+
+  <!-- ALLER -->
+  <section class="day" aria-labelledby="aller">
+    <div class="day-head">
+      <p class="eyebrow">Trajet aller</p>
+      <h2 id="aller">Vendredi 20 novembre</h2>
+    </div>
+
+    <div class="strip">
+      <div class="track" role="img" aria-label="Frise de la journée de 0 h à 24 h : FlixBus de 00:45 à 05:30, puis de 10:25 à 13:45, puis voiture vers 15:00 jusqu'à environ 20:20">
+        <span class="seg" style="--c: var(--flix); left: 3.125%; width: 19.792%"></span>
+        <span class="seg" style="--c: var(--flix); left: 43.403%; width: 13.889%"></span>
+        <span class="seg est" style="--c: var(--car); left: 62.5%; width: 22.153%"></span>
+      </div>
+      <div class="ticks" aria-hidden="true"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>24h</span></div>
+      <div class="legend"><span style="--c: var(--flix)">En bus</span><span style="--c: var(--car)">En voiture (estimé)</span></div>
+    </div>
+
+    <div class="legs">
+      <article class="leg" style="--c: var(--muted)">
+        <div class="leg-head"><span class="chip">Jeudi 19 nov. · soir</span><span class="dur">3 h 45 avant le bus</span></div>
+        <ol class="stops">
+          <li><time>21:00</time><span class="place">Huy (départ vers 21 h)</span></li>
+          <li><time>00:45</time><span class="place">Gare de Bruxelles-Nord (départ du FlixBus)</span></li>
+        </ol>
+      </article>
+
+      <article class="leg" style="--c: var(--flix)">
+        <div class="leg-head"><span class="chip">FlixBus</span><span class="dur">4 h 45</span></div>
+        <ol class="stops">
+          <li><time>00:45</time><span class="place">Gare de Bruxelles-Nord</span></li>
+          <li><time>05:30</time><span class="place">Paris (Bercy Seine)</span></li>
+        </ol>
+        <div class="meta">
+          <span>Réservation n°</span><code id="r1">3412037679</code>
+          <button class="copy" type="button" data-target="r1">Copier</button>
+        </div>
+      </article>
+
+      <div class="gap"><span>Attente à Paris Bercy Seine : <b>4 h 55</b></span></div>
+
+      <article class="leg" style="--c: var(--flix)">
+        <div class="leg-head"><span class="chip">FlixBus</span><span class="dur">3 h 20</span></div>
+        <ol class="stops">
+          <li><time>10:25</time><span class="place">Paris (Bercy Seine)</span></li>
+          <li><time>13:45</time><span class="place">Nevers</span></li>
+        </ol>
+        <div class="meta">
+          <span>Réservation n°</span><code id="r2">3412039466</code>
+          <button class="copy" type="button" data-target="r2">Copier</button>
+        </div>
+      </article>
+
+      <div class="gap"><span>Nevers : environ <b>1 h 15</b> avant de reprendre la route</span></div>
+
+      <article class="leg" style="--c: var(--car)">
+        <div class="leg-head"><span class="chip">Voiture</span><span class="dur">≈ 5 h 19</span></div>
+        <ol class="stops">
+          <li><time>15:00</time><span class="place">Nevers (départ vers 15 h)</span></li>
+          <li><time>20:20</time><span class="place">Nîmes (arrivée estimée)</span></li>
+        </ol>
+        <div class="meta">
+          <span>≈ 507 km</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="stay" aria-label="Séjour à Nîmes">
+    <span class="big">≈ 60 h 40 à Nîmes</span>
+    <p>Arrivée estimée vendredi vers 20:20, départ lundi vers 9:00.</p>
+  </section>
+
+  <!-- RETOUR -->
+  <section class="day" aria-labelledby="retour">
+    <div class="day-head">
+      <p class="eyebrow">Trajet retour</p>
+      <h2 id="retour">Lundi 23 novembre</h2>
+    </div>
+
+    <div class="strip">
+      <div class="track" role="img" aria-label="Frise de la journée de 0 h à 24 h : voiture vers 9:00 jusqu'à environ 14:20, TER de 14:25 à 16:52, puis Eurostar de 19:23 à 20:47">
+        <span class="seg est" style="--c: var(--car); left: 37.5%; width: 22.153%"></span>
+        <span class="seg" style="--c: var(--ter); left: 60.069%; width: 10.208%"></span>
+        <span class="seg" style="--c: var(--euro); left: 80.764%; width: 5.833%"></span>
+      </div>
+      <div class="ticks" aria-hidden="true"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>24h</span></div>
+      <div class="legend"><span style="--c: var(--car)">En voiture (estimé)</span><span style="--c: var(--ter)">TER</span><span style="--c: var(--euro)">Eurostar</span></div>
+    </div>
+
+    <div class="legs">
+      <article class="leg" style="--c: var(--car)">
+        <div class="leg-head"><span class="chip">Voiture</span><span class="dur">≈ 5 h 19</span></div>
+        <ol class="stops">
+          <li><time>09:00</time><span class="place">Nîmes (départ vers 9 h)</span></li>
+          <li><time>14:20</time><span class="place">Nevers (arrivée estimée)</span></li>
+        </ol>
+        <div class="meta">
+          <span>≈ 507 km</span>
+        </div>
+      </article>
+
+      <div class="gap warn"><span>Marge estimée avant le TER de 14:25 : <b>5 min</b></span></div>
+
+      <article class="leg" style="--c: var(--ter)">
+        <div class="leg-head"><span class="chip">TER · direct</span><span class="dur">2 h 27</span></div>
+        <ol class="stops">
+          <li><time>14:25</time><span class="place">Nevers</span></li>
+          <li><time>16:52</time><span class="place">Paris Bercy – Bourgogne Pays d’Auvergne</span></li>
+        </ol>
+        <div class="meta">
+          <span>1 voyageur</span><span>Vélo · Wi-Fi à bord</span>
+          <span class="grow">Billet dans Google Wallet</span>
+        </div>
+      </article>
+
+      <div class="gap"><span>Changement de gare à Paris : <b>2 h 31</b> entre les deux trains</span></div>
+
+      <article class="leg" style="--c: var(--euro)">
+        <div class="leg-head"><span class="chip">Eurostar · direct</span><span class="dur">1 h 24</span></div>
+        <ol class="stops">
+          <li><time>19:23</time><span class="place">Paris Gare du Nord</span></li>
+          <li><time>20:47</time><span class="place">Bruxelles-Midi (Brussel-Zuid)</span></li>
+        </ol>
+        <div class="meta">
+          <span>1 voyageur</span>
+          <span class="grow">Billet dans Google Wallet</span>
+        </div>
+      </article>
+
+      <article class="leg" style="--c: var(--muted)">
+        <div class="leg-head"><span class="chip">Retour à Huy</span><span class="dur">≈ 2 h 43</span></div>
+        <ol class="stops">
+          <li><time>20:47</time><span class="place">Bruxelles-Midi (arrivée Eurostar)</span></li>
+          <li><time>23:30</time><span class="place">Huy (arrivée vers 23 h 30)</span></li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="day" aria-labelledby="avant">
+    <div class="day-head">
+      <p class="eyebrow">Avant de partir</p>
+      <h2 id="avant">À préparer</h2>
+    </div>
+    <ul class="checks">
+      <li><label for="c1"><input type="checkbox" id="c1" data-k="id"><span>Pièce d’identité</span></label></li>
+      <li><label for="c2"><input type="checkbox" id="c2" data-k="flix"><span>Les deux billets FlixBus du vendredi</span></label></li>
+      <li><label for="c3"><input type="checkbox" id="c3" data-k="ter"><span>Billet TER ajouté à Google Wallet</span></label></li>
+      <li><label for="c4"><input type="checkbox" id="c4" data-k="euro"><span>Billet Eurostar ajouté à Google Wallet</span></label></li>
+    </ul>
+  </section>
+
+  <p class="foot">Horaires et numéros repris de vos confirmations de réservation. Vérifiez les horaires la veille du départ.</p>
+</main>
+
+<script>
+(function () {
+  // Countdown to the first departure (Brussels time, UTC+1 in November)
+  var target = new Date("2026-11-20T00:45:00+01:00").getTime();
+  var d = document.getElementById("cd-d"), h = document.getElementById("cd-h"), m = document.getElementById("cd-m");
+  var title = document.getElementById("count-title");
+  function tick() {
+    var diff = target - Date.now();
+    if (diff <= 0) {
+      title.textContent = "Le voyage a commencé";
+      d.textContent = h.textContent = m.textContent = "0";
+      return;
+    }
+    var mins = Math.floor(diff / 60000);
+    d.textContent = Math.floor(mins / 1440);
+    h.textContent = Math.floor((mins % 1440) / 60);
+    m.textContent = mins % 60;
+  }
+  tick();
+  setInterval(tick, 30000);
+
+  // Copy booking numbers
+  function selectText(el) {
+    var r = document.createRange(); r.selectNodeContents(el);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var el = document.getElementById(btn.dataset.target);
+      var done = function () { btn.textContent = "Copié"; setTimeout(function () { btn.textContent = "Copier"; }, 1500); };
+      try {
+        navigator.clipboard.writeText(el.textContent.trim()).then(done, function () { selectText(el); });
+      } catch (e) { selectText(el); }
+    });
+  });
+
+  // Checklist, remembered in this browser
+  var KEY = "voyage-nevers-checks";
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+  document.querySelectorAll(".checks input").forEach(function (cb) {
+    cb.checked = !!saved[cb.dataset.k];
+    cb.addEventListener("change", function () {
+      saved[cb.dataset.k] = cb.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
